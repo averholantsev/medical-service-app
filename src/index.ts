@@ -47,8 +47,9 @@ fastifyClient.post('/api/parse-pdf', async (request, reply) => {
       return reply.code(400).send({ error: 'No PDF file provided' });
     }
 
-    // Parse PDF
-    const loadingTask = pdf.getDocument({ data: pdfBuffer });
+    // Parse PDF - convert Buffer to Uint8Array
+    const pdfUint8Array = new Uint8Array(pdfBuffer);
+    const loadingTask = pdf.getDocument({ data: pdfUint8Array });
     const pdfDocument = await loadingTask.promise;
     const numPages = pdfDocument.numPages;
     const textContent: string[] = [];
@@ -65,7 +66,6 @@ fastifyClient.post('/api/parse-pdf', async (request, reply) => {
       mimetype,
       pageCount: numPages,
       textByPage: textContent,
-      fullText: textContent.join('\n---\n'),
     };
   } catch (error) {
     fastifyClient.log.error(error);
