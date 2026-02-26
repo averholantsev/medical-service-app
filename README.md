@@ -5,9 +5,12 @@ This is a medical service API built with Node.js and Fastify framework.
 ## Features
 
 - Health check endpoint (`/api/health`)
+- PDF parsing endpoint (`/api/parse-pdf`)
+- **NEW**: LLM-powered PDF analysis endpoint (`/api/parse-pdf-with-llm`)
 - High performance and low overhead
 - JSON Schema validation
 - Detailed logging
+- Integration with RouterAI API for LLM processing
 
 ## Prerequisites
 

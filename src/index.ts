@@ -7,37 +7,55 @@ if (process.env.NODE_ENV !== 'production') {
 import { createServer } from './config/fastify.config.js';
 import { HealthController } from './controllers/health.controller.js';
 import { PdfController } from './controllers/pdf.controller.js';
+import { PdfLlmController } from './controllers/pdf-llm.controller.js';
 import { FileService } from './services/file.service.js';
 import { PdfParserService } from './services/pdf-parser.service.js';
+import { LlmService } from './services/llm.service.js';
 
-// Initialize services with dependency injection
-const fileService = new FileService();
-const pdfParserService = new PdfParserService(fileService);
+// Initialize services and controllers
+const initializeApp = async () => {
+  // Load configuration
+  const config = await import('./config/app.config.js');
+  const appConfig = config.getAppConfig();
 
-// Initialize controllers
-const healthController = new HealthController();
-const pdfController = new PdfController(fileService, pdfParserService);
+  // Initialize services with dependency injection
+  const fileService = new FileService();
+  const pdfParserService = new PdfParserService(fileService);
+  const llmService = new LlmService(appConfig.llmConfig);
 
-// Create Fastify instance
-const fastifyClient = createServer();
+  // Initialize controllers
+  const healthController = new HealthController();
+  const pdfController = new PdfController(fileService, pdfParserService);
+  const pdfLlmController = new PdfLlmController(
+    fileService,
+    pdfParserService,
+    llmService,
+  );
 
-// Register routes
-fastifyClient.get(
-  '/api/health',
-  healthController.healthCheck.bind(healthController),
-);
-fastifyClient.post(
-  '/api/parse-pdf',
-  pdfController.parsePdf.bind(pdfController),
-);
+  // Create Fastify instance
+  const fastifyClient = createServer();
+
+  // Register routes
+  fastifyClient.get(
+    '/api/health',
+    healthController.healthCheck.bind(healthController),
+  );
+  fastifyClient.post(
+    '/api/parse-pdf',
+    pdfController.parsePdf.bind(pdfController),
+  );
+  fastifyClient.post(
+    '/api/parse-pdf-with-llm',
+    pdfLlmController.parsePdfWithLlm.bind(pdfLlmController),
+  );
+
+  return { fastifyClient, appConfig };
+};
 
 // Run the server
 const start = async () => {
   try {
-    const config = await import('./config/app.config.js');
-
-    const appConfig = config.getAppConfig();
-    console.log(appConfig);
+    const { fastifyClient, appConfig } = await initializeApp();
 
     await fastifyClient.listen({
       port: appConfig.port,
@@ -48,7 +66,7 @@ const start = async () => {
       `Server listening on ${appConfig.host}:${appConfig.port}`,
     );
   } catch (err) {
-    fastifyClient.log.error(err);
+    console.error('Failed to start server:', err);
     process.exit(1);
   }
 };
