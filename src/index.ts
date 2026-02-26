@@ -1,3 +1,9 @@
+import dotenv from 'dotenv';
+
+if (process.env.NODE_ENV !== 'production') {
+  dotenv.config({ path: '.env.local' });
+}
+
 import { createServer } from './config/fastify.config.js';
 import { HealthController } from './controllers/health.controller.js';
 import { PdfController } from './controllers/pdf.controller.js';
@@ -29,7 +35,9 @@ fastifyClient.post(
 const start = async () => {
   try {
     const config = await import('./config/app.config.js');
+
     const appConfig = config.getAppConfig();
+    console.log(appConfig);
 
     await fastifyClient.listen({
       port: appConfig.port,
