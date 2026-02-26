@@ -32,13 +32,7 @@ export class PdfLlmController {
       );
 
       // Формируем итоговый результат
-      const result: IPdfLlmResult = {
-        filename: uploadedFile.filename,
-        mimetype: uploadedFile.mimetype,
-        pageCount: parseResult.pageCount,
-        textByPage: parseResult.textByPage,
-        llmAnalysis: llmResult,
-      };
+      const result = llmResult;
 
       return result;
     } catch (error) {
